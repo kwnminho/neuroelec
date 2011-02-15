@@ -8,7 +8,7 @@ void setup()
 {
   Serial.begin(9600);  // initialize serial interface for print()
   dac.begin();  // initialize i2c interface
-  dac.vdd(5.00); // set VDD of MCP4728 for correct conversion between LSB and Vout
+  dac.vdd(5000); // set VDD(mV) of MCP4728 for correct conversion between LSB and Vout
 
 /* If LDAC pin is not grounded, need to be pull down for normal operation.
 
@@ -16,18 +16,12 @@ void setup()
   pinMode(LDACpin, OUTPUT); 
   digitalWrite(LDACpin, LOW);
 */
+  printStatus(); // Print all internal value and setting of input register and EEPROM. 
 }
 
 
 void loop()
 {
-/* 
-  Debug print.
-    Print all internal value and setting of input register and EEPROM. 
-*/
-
-  dac.print(); // serial print all current settings and values of input register and EEPROM.
-
 
 /* 
   Basic analog writing to DAC
@@ -39,9 +33,9 @@ void loop()
   Serial.print("input register value of channel 0 = ");
   Serial.println(value, DEC); // serial print of value
 
-  dac.voutWrite(1.8, 1.8, 1.8, 1.8) // write to input register of DAC. Value (V < VDD)
-  dac.voutWrite(2, 1.6) // write to input register of DAC. Channel 0 - 3, Value (V < VDD)
-  float vout = dac.getVout(1); // get current voltage out of channel 1
+  dac.voutWrite(1800, 1800, 1800, 1800); // write to input register of DAC. Value(mV) (V < VDD)
+  dac.voutWrite(2, 1600); // write to input register of DAC. Channel 0 - 3, Value(mV) (V < VDD)
+  int vout = dac.getVout(1); // get current voltage out of channel 1
   Serial.print("Voltage out of channel 1 = "); 
   Serial.println(vout, DEC); // serial print of value
 
@@ -90,7 +84,7 @@ void loop()
   dac.eepromWrite(1, 1000); // write to EEPROM of DAC. Channel 0-3, Value 0-4095
   delay(100);//writing to EEPROM takes about 50ms
   dac.eepromWrite(); // write all input register values and settings to EEPROM
-  dalay(100);//
+  delay(100);//
 
 
 /*
@@ -100,4 +94,35 @@ void loop()
   int id = dac.getId(); // return devideID of object
   Serial.print("Device ID  = "); // serial print of value
   Serial.println(id, DEC); // serial print of value
+}
+
+void printStatus()
+{
+  Serial.println("NAME     Vref  Gain  PowerDown  Value");
+  for (int channel=0; channel <= 3; channel++)
+  { 
+    Serial.print("DAC");
+    Serial.print(channel,DEC);
+    Serial.print("   ");
+    Serial.print("    "); 
+    Serial.print(dac.getVref(channel),BIN);
+    Serial.print("     ");
+    Serial.print(dac.getGain(channel),BIN);
+    Serial.print("       ");
+    Serial.print(dac.getPowerDown(channel),BIN);
+    Serial.print("       ");
+    Serial.println(dac.getValue(channel),DEC);
+
+    Serial.print("EEPROM");
+    Serial.print(channel,DEC);
+    Serial.print("    "); 
+    Serial.print(dac.getVrefEp(channel),BIN);
+    Serial.print("     ");
+    Serial.print(dac.getGainEp(channel),BIN);
+    Serial.print("       ");
+    Serial.print(dac.getPowerDownEp(channel),BIN);
+    Serial.print("       ");
+    Serial.println(dac.getValueEp(channel),DEC);
+  }
+  Serial.println(" ");
 }
