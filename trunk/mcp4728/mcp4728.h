@@ -8,15 +8,26 @@ Arduino library for MicroChip MCP4728 I2C D/A converter.
 #include "WProgram.h"
 #include <Wire.h>
 
-#define senseR 0.13
-#define defaultVDD 5
+#define defaultVDD 5000
+
+#define RESET 0B00000110
+#define WAKE 0B00001001
+#define UPDATE 0B00001000
+#define MULTIWRITE 0B01000000
+#define SINGLEWRITE 0B01011000
+#define SEQWRITE 0B01010000
+#define VREFWRITE 0B10000000
+#define GAINWRITE 0B11000000
+#define POWERDOWNWRITE 0B10100000
+#define GENERALCALL 0B0000000
+#define GAINWRITE 0B11000000
+
 
 class mcp4728
 {
   public:
-    mcp4728();
     mcp4728(uint8_t);
-    void     vdd(float);
+    void     vdd(uint16_t);
     void     begin();
     uint8_t  reset();
     uint8_t  wake();
@@ -38,16 +49,14 @@ class mcp4728
     uint8_t  getGain(uint8_t);
     uint8_t  getPowerDown(uint8_t);
     uint16_t getValue(uint8_t);
-    float    getVout(uint8_t);
-    void     voutWrite(uint8_t, float);
-    void     voutWrite(float, float, float, float);
-    float    getCurrent(uint8_t);
-    void     setCurrent(uint8_t, uint16_t);
-    void     setCurrent(uint16_t, uint16_t, uint16_t);
-    float    getFreq();
-    void     setFreq(uint16_t);
-    void     readAddress();
-    void     writeAddress(uint8_t, uint8_t);
+    uint8_t  getVrefEp(uint8_t);
+    uint8_t  getGainEp(uint8_t);
+    uint8_t  getPowerDownEp(uint8_t);
+    uint16_t getValueEp(uint8_t);
+    uint16_t    getVout(uint8_t);
+    void     voutWrite(uint8_t, uint16_t);
+    void     voutWrite(uint16_t, uint16_t, uint16_t, uint16_t);
+
   private:
     void         getStatus();
     uint8_t      fastWrite();
@@ -69,8 +78,9 @@ class mcp4728
     uint8_t      _intVrefEp[4];
     uint8_t      _gainEp[4];
     uint8_t      _powerDownEp[4];
-    float        _vOut[4];
-    float        _vdd;
+    uint16_t     _vOut[4];
+    uint16_t     _vdd;
+    uint8_t      _simpleCommand(byte);
 };
 #endif
 
