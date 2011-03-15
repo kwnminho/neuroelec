@@ -6,7 +6,7 @@ Arduino library for High Power RGB LED Shield.
 #define HPRGB_h
 
 #include "WProgram.h"
-
+#include <Wire.h>
 #define senseR 0.14
 
 #define MULTIWRITE 0B01000000
@@ -28,8 +28,17 @@ class HPRGB
     uint8_t     goToRGB(uint8_t, uint8_t, uint8_t);
     uint8_t     fadeToRGB(uint8_t, uint8_t, uint8_t);
     uint8_t     fadeToHSB(uint8_t, uint8_t, uint8_t);
+    uint8_t     fadeToRandomRGB(uint8_t, uint8_t, uint8_t);
+    uint8_t     fadeToRandomHSB(uint8_t, uint8_t, uint8_t);
     uint8_t     playScript(uint8_t, uint8_t, uint8_t);
     uint8_t     stopScript();
+    uint8_t     setFadeSpeed(uint8_t);
+    uint8_t     setTimeAdj(uint8_t);
+    uint8_t     setAddress(uint8_t);
+    uint8_t     getAddress();
+    uint8_t     setStartupParams(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t);
+    void        getRGBColor(uint8_t*, uint8_t*, uint8_t*);
+    uint8_t     setScriptLengthReps(uint8_t, uint8_t, uint8_t);
   private:
     void         getStatus();
     uint8_t      mcp4728FastWrite();

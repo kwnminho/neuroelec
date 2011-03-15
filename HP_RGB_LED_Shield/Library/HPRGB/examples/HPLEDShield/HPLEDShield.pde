@@ -1,5 +1,5 @@
 #include <Wire.h>
-#include "HPRGB.h"
+#include <HPRGB.h>
 
 
 HPRGB ledShield; // default mcp4728 id(0) and default czyRGB address(9)
@@ -21,6 +21,4 @@ void loop()
   ledShield.fadeToRGB(0,255,0); delay (3000);//fade to RGB color (green)
   ledShield.fadeToRGB(0,0,255); delay (3000); //fade to RGB color (blue)
   ledShield.fadeToHSB(0,0,255); delay (3000); //fade to HSV color (Hue, Saturation, brightness)
-  ledShield.playScript(0,255,0); delay (10000);//play script 0 for 255 times
-  ledShield.stopScript(); //play script 0 for 255 times
 }

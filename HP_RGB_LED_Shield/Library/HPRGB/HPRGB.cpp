@@ -7,9 +7,12 @@
 
 /* _____PROJECT INCLUDES_____________________________________________________ */
 #include "HPRGB.h"
-#include <Wire.h>
 
 /* _____PUBLIC FUNCTIONS_____________________________________________________ */
+
+/*
+Set address for MCP4728 and attiny85
+*/
 
 HPRGB::HPRGB(uint8_t mcp4728ID, uint8_t cyzAddr)
 {
@@ -17,6 +20,11 @@ HPRGB::HPRGB(uint8_t mcp4728ID, uint8_t cyzAddr)
   _mcp4728_address = (BASE_ADDR | _mcp4728ID);
   _cyzAddr = cyzAddr;
 }
+
+/*
+Wire.begin for I2C.
+Get current settings from MCP4728. Set proper settings (voltage reference, gain, powerdown mode in case)
+*/
 
 void HPRGB::begin()
 {
@@ -31,10 +39,19 @@ void HPRGB::begin()
   mcp4728FastWrite(); // write initial values to input registers.
 }
 
+/*
+Write current values and settings to MCP4728 EEPROM
+*/
+
 uint8_t HPRGB::eepromWrite()
 {
   return mcp4728SeqWrite();
 }
+
+/*
+Return current value for a channel (value / 4098)
+*/
+
 uint16_t HPRGB::getValue(uint8_t channel)
 {
   return _values[channel];
@@ -54,7 +71,9 @@ uint16_t HPRGB::getCurrent(uint8_t channel) {
   }
   return (currentSet);
 }
-
+/*
+Set maximum current setting of the channels (mA)
+*/
 void HPRGB::setCurrent(uint16_t currentSet1, uint16_t currentSet2, uint16_t currentSet3) {
   uint16_t values[3] = {currentSet1, currentSet2, currentSet3};
   for (uint8_t channel=0; channel <= 2; channel++) {
@@ -87,6 +106,12 @@ void HPRGB::setFreq(uint16_t freq) {
   mcp4728FastWrite();
 }
 
+/*
+CyzRGB commands for PWM dimming and RGB color mixing
+Commands are based on CyzRGB wiki and blinkM datasheet.
+Only partially implemented
+*/
+
 uint8_t HPRGB::goToRGB(uint8_t red, uint8_t green, uint8_t blue)
 {
   Wire.beginTransmission(_cyzAddr);
@@ -116,13 +141,33 @@ uint8_t HPRGB::fadeToHSB(uint8_t hue, uint8_t saturation, uint8_t brightness)
   return Wire.endTransmission();
 }
 
-uint8_t HPRGB::playScript(uint8_t script_id, uint8_t reps, uint8_t pos)
+uint8_t HPRGB::fadeToRandomRGB(uint8_t red, uint8_t green, uint8_t blue)
+{
+  Wire.beginTransmission(_cyzAddr);
+  Wire.send('C');
+  Wire.send(red);
+  Wire.send(green);
+  Wire.send(blue);
+  return Wire.endTransmission();
+}
+
+uint8_t HPRGB::fadeToRandomHSB(uint8_t hue, uint8_t saturation, uint8_t brightness)
+{
+  Wire.beginTransmission(_cyzAddr);
+  Wire.send('H');
+  Wire.send(hue);
+  Wire.send(saturation);
+  Wire.send(brightness);
+  return Wire.endTransmission();
+}
+
+uint8_t HPRGB::playScript(uint8_t scriptNumber, uint8_t repeat, uint8_t position)
 {
   Wire.beginTransmission(_cyzAddr);
   Wire.send('p');
-  Wire.send(script_id);
-  Wire.send(reps);
-  Wire.send(pos);
+  Wire.send(scriptNumber);
+  Wire.send(repeat);
+  Wire.send(position);
   return Wire.endTransmission();
 }
 
@@ -132,6 +177,82 @@ uint8_t HPRGB::stopScript()
   Wire.send('o');
   return Wire.endTransmission();
 }
+
+uint8_t HPRGB::setFadeSpeed(uint8_t fadespeed)
+{
+  Wire.beginTransmission(_cyzAddr);
+  Wire.send('f');
+  Wire.send(fadespeed);
+  return Wire.endTransmission();  
+}
+
+uint8_t HPRGB::setTimeAdj(uint8_t timeadj)
+{
+  Wire.beginTransmission(_cyzAddr);
+  Wire.send('t');
+  Wire.send(timeadj);
+  return Wire.endTransmission();  
+}
+
+void HPRGB::getRGBColor(uint8_t* red, uint8_t* green, uint8_t* blue)
+{
+  Wire.beginTransmission(_cyzAddr);
+  Wire.send('g');
+  Wire.endTransmission();
+  Wire.requestFrom(_cyzAddr,(uint8_t)3);
+  if( Wire.available() ) {
+    *red = Wire.receive();
+    *green = Wire.receive();
+    *blue = Wire.receive();
+  }
+}
+
+uint8_t HPRGB::setScriptLengthReps(uint8_t scriptNumber, uint8_t length, uint8_t repeat)
+{
+  Wire.beginTransmission(_cyzAddr);
+  Wire.send('L');
+  Wire.send(scriptNumber);
+  Wire.send(length);
+  Wire.send(repeat);
+  return Wire.endTransmission();
+}
+
+uint8_t HPRGB::setAddress(uint8_t addr)
+{
+  Wire.beginTransmission(0x00);
+  Wire.send('A');
+  Wire.send(addr);
+  Wire.send(0xD0);
+  Wire.send(0x0D);
+  Wire.send(addr);
+  return Wire.endTransmission();
+  delay(50);
+}
+
+uint8_t HPRGB::getAddress()
+{
+  Wire.beginTransmission(_cyzAddr);
+  Wire.send('a');
+  Wire.endTransmission();
+  Wire.requestFrom(_cyzAddr, (uint8_t)1);
+  if( Wire.available() ) {
+    uint8_t addr = Wire.receive();
+    return addr;
+  }
+  return -1;
+}
+
+uint8_t HPRGB::setStartupParams(uint8_t mode, uint8_t scriptNumber, uint8_t repeat, uint8_t fadespeed, uint8_t timeadj)
+{
+  Wire.beginTransmission(_cyzAddr);
+  Wire.send('B');
+  Wire.send(mode);
+  Wire.send(scriptNumber);
+  Wire.send(repeat);
+  Wire.send(fadespeed);
+  Wire.send(timeadj);
+  return Wire.endTransmission();
+} 
 /* _____PRIVATE FUNCTIONS_____________________________________________________ */
 
 /*
@@ -184,7 +305,9 @@ uint8_t HPRGB::mcp4728SeqWrite() {
   }
   return Wire.endTransmission();
 }
-
+/*
+Get current values and settings from MCP4728 for initialization
+*/
 void HPRGB::getStatus()
 {
   Wire.requestFrom(int(_mcp4728_address), 24);

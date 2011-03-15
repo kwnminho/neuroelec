@@ -1,0 +1,43 @@
+#######################################
+# Syntax Coloring Map For i2c_adc_ads7828
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+HPRGB			KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin			KEYWORD2
+getCurrent		KEYWORD2
+setCurrent		KEYWORD2
+getFreq			KEYWORD2
+setFreq			KEYWORD2
+eepromWrite		KEYWORD2
+getValue		KEYWORD2
+goToRGB			KEYWORD2
+fadeToRGB		KEYWORD2
+fadeToHSB		KEYWORD2
+fadeToRandomRGB		KEYWORD2
+fadeToRandomHSB		KEYWORD2
+playScript		KEYWORD2
+stopScript		KEYWORD2
+setFadeSpeed		KEYWORD2
+setTimeAdj		KEYWORD2
+setAddress		KEYWORD2
+getAddress		KEYWORD2
+setStartupParams	KEYWORD2
+getRGBColor		KEYWORD2
+setScriptLengthReps	KEYWORD2
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
