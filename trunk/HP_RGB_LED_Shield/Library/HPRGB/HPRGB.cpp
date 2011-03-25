@@ -253,6 +253,45 @@ uint8_t HPRGB::setStartupParams(uint8_t mode, uint8_t scriptNumber, uint8_t repe
   Wire.send(timeadj);
   return Wire.endTransmission();
 } 
+
+float HPRGB::getIntTemp()
+{
+  uint8_t hiTemp, lowTemp;
+  Wire.beginTransmission(TMP421_ADDR);
+  Wire.send(0x00);
+  Wire.endTransmission();
+  Wire.requestFrom(TMP421_ADDR, 2); // request 2 byte from address 1001000
+  while(Wire.available())
+  {
+  hiTemp = Wire.receive(); // Read the first octet
+  lowTemp = Wire.receive(); // Read the second octet
+  }
+  return (hiTemp + (lowTemp >> 4)*0.0625);
+}
+float HPRGB::getIntTempF()
+{
+  return (getIntTemp()*9/5 + 32);
+}
+
+float HPRGB::getExtTemp()
+{
+  uint8_t hiTemp, lowTemp;
+  Wire.beginTransmission(TMP421_ADDR);
+  Wire.send(0x01);
+  Wire.endTransmission();
+  Wire.requestFrom(TMP421_ADDR, 2); // request 2 byte from address 1001000
+  while(Wire.available())
+  {
+  hiTemp = Wire.receive(); // Read the first octet
+  lowTemp = Wire.receive(); // Read the second octet
+  }
+  return (hiTemp + (lowTemp >> 4)*0.0625);
+} 
+float HPRGB::getExtTempF()
+{
+  return (getExtTemp()*9/5 + 32);
+}
+
 /* _____PRIVATE FUNCTIONS_____________________________________________________ */
 
 /*

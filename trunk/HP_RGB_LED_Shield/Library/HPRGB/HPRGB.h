@@ -12,7 +12,8 @@ Arduino library for High Power RGB LED Shield.
 #define MULTIWRITE 0B01000000
 #define SINGLEWRITE 0B01011000
 #define SEQWRITE 0B01010000
-
+#define BASE_ADDR 0x60
+#define TMP421_ADDR 0x4C
 
 class HPRGB
 {
@@ -39,13 +40,16 @@ class HPRGB
     uint8_t     setStartupParams(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t);
     void        getRGBColor(uint8_t*, uint8_t*, uint8_t*);
     uint8_t     setScriptLengthReps(uint8_t, uint8_t, uint8_t);
+    float       getIntTemp();
+    float       getExtTemp();
+    float       getIntTempF();
+    float       getExtTempF();
   private:
     void         getStatus();
     uint8_t      mcp4728FastWrite();
     uint8_t      mcp4728MultiWrite();
     uint8_t      mcp4728SingleWrite(uint8_t);
     uint8_t      mcp4728SeqWrite();
-    static const uint8_t BASE_ADDR                 = 0x60;
     uint8_t      _mcp4728_address;
     uint8_t      _mcp4728ID;
     uint8_t      _cyzAddr;	
