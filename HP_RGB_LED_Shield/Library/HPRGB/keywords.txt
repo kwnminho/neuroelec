@@ -32,6 +32,10 @@ getAddress		KEYWORD2
 setStartupParams	KEYWORD2
 getRGBColor		KEYWORD2
 setScriptLengthReps	KEYWORD2
+getIntTemp		KEYWORD2
+getIntTempF		KEYWORD2
+getExtTemp		KEYWORD2
+getExtTempF		KEYWORD2
 #######################################
 # Instances (KEYWORD2)
 #######################################
