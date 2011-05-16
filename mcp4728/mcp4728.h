@@ -9,7 +9,7 @@ Arduino library for MicroChip MCP4728 I2C D/A converter.
 #include <Wire.h>
 
 #define defaultVDD 5000
-
+#define BASE_ADDR 0x60
 #define RESET 0B00000110
 #define WAKE 0B00001001
 #define UPDATE 0B00001000
@@ -37,6 +37,7 @@ class mcp4728
     uint8_t  eepromWrite(uint16_t, uint16_t, uint16_t, uint16_t);
     uint8_t  eepromWrite(uint8_t, uint16_t);
     uint8_t  eepromWrite();
+    uint8_t  eepromReset();
     void     print();
     uint8_t  setVref(uint8_t, uint8_t, uint8_t, uint8_t);
     uint8_t  setVref(uint8_t, uint8_t);
@@ -67,7 +68,6 @@ class mcp4728
     uint8_t      writeGain();
     uint8_t      writePowerDown();
     void         writeVout();
-    static const uint8_t BASE_ADDR                 = 0x60;
     uint8_t      _dev_address;
     uint8_t      _deviceID;
     uint8_t      _intVref[4];

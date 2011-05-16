@@ -1,3 +1,8 @@
+/* 
+Basic use of Arduino library for MicroChip MCP4728 I2C D/A converter
+For discussion and feedback, please go to http://arduino.cc/forum/index.php/topic,51842.0.html
+*/
+
 #include <Wire.h>
 #include "mcp4728.h"
 
