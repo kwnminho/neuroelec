@@ -157,7 +157,7 @@ It is not really fade. Here for just compatiblibity with example code
 void HPRGB::fadeToHSB(uint8_t hue, uint8_t saturation, uint8_t value)
 {
   uint8_t r, g, b;
-  hsv_to_rgb(hue, saturation, value, &r, &g, &b);
+  HSBtoRGB(hue, saturation, value, &r, &g, &b);
   goToRGB(r, g, b);
 }
 /*
@@ -362,9 +362,11 @@ uint16_t HPRGB::pca9685GetPWM(uint8_t channel)
   }
 }
 /*
-HSV to RGB from cyzRGB
+HSV to RGB adopted from cyzRGB and adafruit
+http://code.google.com/p/codalyze/source/browse/cyz_rgb/trunk/cyz/color.c
+https://github.com/adafruit/RGB-matrix-Panel/blob/master/examples/plasma/plasma.pde
 */
-void HPRGB::hsv_to_rgb(uint8_t h, uint8_t s, uint8_t v, uint8_t* r, uint8_t* g, uint8_t* b)
+void HPRGB::HSBtoRGB(uint8_t h, uint8_t s, uint8_t v, uint8_t* r, uint8_t* g, uint8_t* b)
 {
 
         if ( s == 0 )
@@ -374,23 +376,19 @@ void HPRGB::hsv_to_rgb(uint8_t h, uint8_t s, uint8_t v, uint8_t* r, uint8_t* g, 
         else
         {       
                 
-                uint8_t var_i = h/43;                                 // Hue quadrant (sixths) - 43 is (256/6)
-                uint8_t var_h = (var_i*43)/16;                        // Caculate quadrant floor/16: 
-                                                                      // H Input of 0..255 should produce 0, 2, 5, 8, 10, 13
-                s /= 16;                                              // Pre-scale S
-                uint8_t var_v = v/16;                                 // Pre-scale V
-                                                                      // These interpolations using uint8 range 0..255 are equivalent
-                                                                      // to using the below algorithm with floating point range 0..1
-                uint8_t var_1 = var_v * ( 16 - s );                   // V*(1-S)
-                uint8_t var_2 = var_v * ( 16 - (s * var_h)/16 );      // V*(1-(S*H_Floor))
-                uint8_t var_3 = var_v * ( 16 - (s * (16-var_h))/16 ); // V*(1-(S*(1-H_Floor)))
+                uint8_t i = (h*6)/256;
+                uint16_t f = (h*6) % 256;
 
-                if      ( var_i == 0 ) { *r = v     ; *g = var_3 ; *b = var_1; } // 0   deg (r)   to 60  deg (r+g)
-                else if ( var_i == 1 ) { *r = var_2 ; *g = v     ; *b = var_1; } // 60  deg (r+g) to 120 deg (g)
-                else if ( var_i == 2 ) { *r = var_1 ; *g = v     ; *b = var_3; } // 120 deg (g)   to 180 deg (g+b)
-                else if ( var_i == 3 ) { *r = var_1 ; *g = var_2 ; *b = v;     } // 180 deg (g+b) to 240 deg (b)
-                else if ( var_i == 4 ) { *r = var_3 ; *g = var_1 ; *b = v;     } // 240 deg (b)   to 300 deg (b+r)
-                else                   { *r = v     ; *g = var_1 ; *b = var_2; } // 300 deg (b+r) to 0   deg (r)
+                uint16_t p = (v * (255 - s)) / 256;
+                uint16_t q = (v * (255 - (s * f)/256)) / 256;
+                uint16_t t = (v * (255 - (s * (255 - f))/256)) / 256;
+
+                if      ( i == 0 ) { *r = v ; *g = t ; *b = p; } // 0   deg (r)   to 60  deg (r+g)
+                else if ( i == 1 ) { *r = q ; *g = v ; *b = p; } // 60  deg (r+g) to 120 deg (g)
+                else if ( i == 2 ) { *r = p ; *g = v ; *b = t; } // 120 deg (g)   to 180 deg (g+b)
+                else if ( i == 3 ) { *r = p ; *g = q ; *b = v; } // 180 deg (g+b) to 240 deg (b)
+                else if ( i == 4 ) { *r = t ; *g = p ; *b = v; } // 240 deg (b)   to 300 deg (b+r)
+                else               { *r = v ; *g = p ; *b = q; } // 300 deg (b+r) to 0   deg (r)
         }
 
 }

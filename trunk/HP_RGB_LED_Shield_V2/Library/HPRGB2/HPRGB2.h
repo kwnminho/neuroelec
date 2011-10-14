@@ -60,7 +60,7 @@ class HPRGB
     void         pca9685PWMSingle(uint8_t , uint16_t);
     void         pca9685PWM(uint16_t ,uint16_t ,uint16_t);
     uint16_t     pca9685GetPWM(uint8_t);
-    void         hsv_to_rgb(uint8_t , uint8_t, uint8_t, uint8_t*, uint8_t*, uint8_t*);
+    void         HSBtoRGB(uint8_t , uint8_t, uint8_t, uint8_t*, uint8_t*, uint8_t*);
 };
 #endif
 
