@@ -77,6 +77,7 @@ uint8_t SoftI2cMaster::start(uint8_t addressRW)
 // issue a stop condition
 void SoftI2cMaster::stop(void)
 {
+  digitalWrite(sdaPin_, LOW);
   delayMicroseconds(I2C_DELAY_USEC);
   digitalWrite(sclPin_, HIGH);
   delayMicroseconds(I2C_DELAY_USEC);
@@ -118,8 +119,9 @@ uint8_t SoftI2cMaster::ldacwrite(uint8_t b, uint8_t ldacpin)
     digitalWrite(sclPin_, LOW);
   }
   // get Ack or Nak
-  digitalWrite(sdaPin_, HIGH);
   digitalWrite(ldacpin, LOW);
+  digitalWrite(sdaPin_, HIGH);
+ 
   pinMode(sdaPin_, INPUT);
   digitalWrite(sclPin_, HIGH);
   b = digitalRead(sdaPin_);
