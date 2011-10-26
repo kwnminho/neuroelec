@@ -6,7 +6,8 @@ Analog signal is captured at 9.6 KHz, 64 spectrum bands each 150Hz which can be 
 Load the this file to Arduio, run Processing application.
 
 Original Fixed point FFT library is from ELM Chan, http://elm-chan.org/works/akilcd/report_e.html
-Ported to the library and demo codes are from AMurchick http://arduino.cc/forum/index.php/topic,37751.0.html
+A way to port it to the Arduino library and most demo codes are from AMurchick http://arduino.cc/forum/index.php/topic,37751.0.html
+Processing app is based on codes from boolscott http://boolscott.wordpress.com/2010/02/04/arduino-processing-analogue-bar-graph-2/
 */
 
 
@@ -41,7 +42,7 @@ void loop()
     fft_output(bfly_buff, spektrum);
 
     for (byte i = 0; i < 64; i++){
-      Serial.print(spektrum[i],BYTE);
+      Serial.write(spektrum[i]);
     }
    position = 0;
   }
@@ -49,7 +50,7 @@ void loop()
 
 void establishContact() {
  while (Serial.available() <= 0) {
-      Serial.print('A', BYTE);   // send a capital A
+      Serial.write('A');   // send a capital A
       delay(300);
   }
 }
