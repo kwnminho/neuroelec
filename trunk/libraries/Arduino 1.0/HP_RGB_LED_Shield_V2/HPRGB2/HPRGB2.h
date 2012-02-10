@@ -5,7 +5,16 @@ Arduino library for High Power RGB LED Shield.
 #ifndef HPRGB2_h
 #define HPRGB2_h
 
+#if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
+#define WIRE_WRITE Wire.write
+#define WIRE_READ Wire.read
+#else
+#include "WProgram.h"
+#define WIRE_WRITE Wire.send
+#define WIRE_READ Wire.receive
+#endif
+
 #include <Wire.h>
 #define senseR 0.14
 
@@ -27,6 +36,8 @@ class HPRGB
     uint16_t    getValue(uint8_t);
     void        goToRGB(uint8_t, uint8_t, uint8_t);
     void        goToRGB12(uint16_t, uint16_t, uint16_t);
+    void        writeCH(uint8_t, uint8_t);
+    void        writeCH12(uint8_t, uint16_t);
     void        goToHSB(uint8_t, uint8_t, uint8_t);
     void        fadeToHSB(uint8_t, uint8_t, uint8_t);
     void        setPWMFrequency(uint16_t frequency);
@@ -57,8 +68,7 @@ class HPRGB
     uint8_t      _pca9685ID;
     void         pca9685Wake();
     void         pca9685PWMPreScale(uint8_t);
-    void         pca9685PWMSingle(uint8_t , uint16_t);
-    void         pca9685PWM(uint16_t ,uint16_t ,uint16_t);
+    void         pca9685PWM(uint8_t, uint8_t, uint16_t *);
     uint16_t     pca9685GetPWM(uint8_t);
     void         HSBtoRGB(uint8_t , uint8_t, uint8_t, uint8_t*, uint8_t*, uint8_t*);
 };

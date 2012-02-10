@@ -7,7 +7,13 @@
 
 /* _____PROJECT INCLUDES_____________________________________________________ */
 #include "HPRGB2.h"
-#include <avr/pgmspace.h>
+#if defined(__PIC32MX__)
+   #define PROGMEM
+   #define pgm_read_word_near(x)	(*((short *)x))
+   #define prog_uint16_t	const uint16_t
+#else
+   #include <avr/pgmspace.h>
+#endif
 /* _____PUBLIC FUNCTIONS_____________________________________________________ */
 #define CIELPWM(a) (pgm_read_word_near(CIEL12 + a)) // CIE Lightness loopup table function
 
@@ -131,15 +137,32 @@ Default 8 bit input and 12 bit sRGB Gamma corrected PWM ouput
 */
 void HPRGB::goToRGB(uint8_t red, uint8_t green, uint8_t blue)
 {
-  pca9685PWM(CIELPWM(blue),CIELPWM(green),CIELPWM(red));
+  uint16_t values[3] = {CIELPWM(blue),CIELPWM(green),CIELPWM(red)};
+  pca9685PWM(0,3,values);
 }
-
+/*
+Default 8 bit input and 12 bit sRGB Gamma corrected PWM ouput
+*/
+void HPRGB::writeCH(uint8_t channel, uint8_t value)
+{
+  uint16_t values[1] = {CIELPWM(value)};
+  pca9685PWM(channel,1,values);
+}
+/*
+Direct 12bit PWM
+*/
+void HPRGB::writeCH12(uint8_t channel, uint16_t value)
+{
+  uint16_t values[1] = {value};
+  pca9685PWM(channel,1,values);
+}
 /*
 Direct 12bit PWM
 */
 void HPRGB::goToRGB12(uint16_t red, uint16_t green, uint16_t blue)
 {
-  pca9685PWM(blue,green,red);
+  uint16_t values[3] = {blue,green,red};
+  pca9685PWM(0,3,values);
 }
 /*
 HSV 0..255
@@ -165,7 +188,7 @@ Set PWM Frequency 40-1000Hz, Default 200Hz
 */
 void HPRGB::setPWMFrequency(uint16_t freq)
 {
-  uint8_t prescale = (6104/freq) - 1; // FIXME preScale =round(25000000Hz/(4096*freq))-1
+  uint8_t prescale = round(25000000.000/4096.000/freq) - 1;
   pca9685PWMPreScale(prescale);
 }
 
@@ -173,13 +196,13 @@ float HPRGB::getIntTemp()
 {
   uint8_t hiTemp, lowTemp;
   Wire.beginTransmission(TMP421_ADDR);
-  Wire.write((byte)0x00);
+  WIRE_WRITE((byte)0x00);
   Wire.endTransmission();
   Wire.requestFrom(TMP421_ADDR, 2); // request 2 byte from address 1001000
   while(Wire.available())
   {
-  hiTemp = Wire.read(); // Read the first octet
-  lowTemp = Wire.read(); // Read the second octet
+  hiTemp = WIRE_READ(); // Read the first octet
+  lowTemp = WIRE_READ(); // Read the second octet
   }
   return (hiTemp + (lowTemp >> 4)*0.0625);
 }
@@ -192,13 +215,13 @@ float HPRGB::getExtTemp()
 {
   uint8_t hiTemp, lowTemp;
   Wire.beginTransmission(TMP421_ADDR);
-  Wire.write(0x01);
+  WIRE_WRITE(0x01);
   Wire.endTransmission();
   Wire.requestFrom(TMP421_ADDR, 2); // request 2 byte from address 1001000
   while(Wire.available())
   {
-  hiTemp = Wire.read(); // Read the first octet
-  lowTemp = Wire.read(); // Read the second octet
+  hiTemp = WIRE_READ(); // Read the first octet
+  lowTemp = WIRE_READ(); // Read the second octet
   }
   return (hiTemp + (lowTemp >> 4)*0.0625);
 } 
@@ -217,8 +240,8 @@ No command byte.
 uint8_t HPRGB::mcp4728FastWrite() {
   Wire.beginTransmission(_mcp4728_address);
   for (uint8_t channel=0; channel <= 3; channel++) {
-    Wire.write(highByte(_values[channel]));
-    Wire.write(lowByte(_values[channel]));
+    WIRE_WRITE(highByte(_values[channel]));
+    WIRE_WRITE(lowByte(_values[channel]));
   }
   return Wire.endTransmission();
 }
@@ -229,9 +252,9 @@ update voltage referece, power down, gain, values on registers
 uint8_t HPRGB::mcp4728MultiWrite() {
   Wire.beginTransmission(_mcp4728_address);
   for (uint8_t channel=0; channel <= 3; channel++) {
-    Wire.write(MULTIWRITE | (channel << 1)); 
-    Wire.write(_intVref[channel] << 7 | _powerDown[channel] << 5 | _gain[channel] << 4 | highByte(_values[channel]));
-    Wire.write(lowByte(_values[channel]));
+    WIRE_WRITE(MULTIWRITE | (channel << 1)); 
+    WIRE_WRITE(_intVref[channel] << 7 | _powerDown[channel] << 5 | _gain[channel] << 4 | highByte(_values[channel]));
+    WIRE_WRITE(lowByte(_values[channel]));
   }
   return Wire.endTransmission();
 }
@@ -241,9 +264,9 @@ update voltage referece, power down, gain, values on registers
 */
 uint8_t HPRGB::mcp4728SingleWrite(uint8_t channel) {
   Wire.beginTransmission(_mcp4728_address);
-  Wire.write(SINGLEWRITE | (channel << 1)); 
-  Wire.write(_intVref[channel] << 7 | _powerDown[channel] << 5 | _gain[channel] << 4 | highByte(_values[channel]));
-  Wire.write(lowByte(_values[channel]));
+  WIRE_WRITE(SINGLEWRITE | (channel << 1)); 
+  WIRE_WRITE(_intVref[channel] << 7 | _powerDown[channel] << 5 | _gain[channel] << 4 | highByte(_values[channel]));
+  WIRE_WRITE(lowByte(_values[channel]));
   return Wire.endTransmission();
 }
 /*
@@ -252,10 +275,10 @@ update voltage referece, power down, gain, values on registers
 */
 uint8_t HPRGB::mcp4728SeqWrite() {
   Wire.beginTransmission(_mcp4728_address);
-  Wire.write(SEQWRITE); 
+  WIRE_WRITE(SEQWRITE); 
   for (uint8_t channel=0; channel <= 3; channel++) {
-    Wire.write(_intVref[channel] << 7 | _powerDown[channel] << 5 | _gain[channel] << 4 | highByte(_values[channel]));
-    Wire.write(lowByte(_values[channel]));
+    WIRE_WRITE(_intVref[channel] << 7 | _powerDown[channel] << 5 | _gain[channel] << 4 | highByte(_values[channel]));
+    WIRE_WRITE(lowByte(_values[channel]));
   }
   return Wire.endTransmission();
 }
@@ -267,9 +290,9 @@ void HPRGB::getStatus()
   Wire.requestFrom(int(_mcp4728_address), 24);
   while(Wire.available())
   { 
-    int deviceID = Wire.read();
-    int hiByte = Wire.read();
-    int loByte = Wire.read();
+    int deviceID = WIRE_READ();
+    int hiByte = WIRE_READ();
+    int loByte = WIRE_READ();
 
     int isEEPROM = (deviceID & 0B00001000) >> 3;
     int channel = (deviceID & 0B00110000) >> 4;
@@ -293,8 +316,8 @@ Wake PCA9685 ociilator and enable auto increment
 void HPRGB::pca9685Wake()
 {
   Wire.beginTransmission(_pca9685_address);
-  Wire.write((byte)0x00);
-  Wire.write(0B00100001);
+  WIRE_WRITE((byte)0x00);
+  WIRE_WRITE(0B00100001);
   Wire.endTransmission();
 }
 /*
@@ -303,46 +326,27 @@ PCA9685 PWM frequency prescale
 void HPRGB::pca9685PWMPreScale(uint8_t prescale)
 {
   Wire.beginTransmission(_pca9685_address);
-  Wire.write(0xfe);
-  Wire.write(prescale);
+  WIRE_WRITE(0xfe);
+  WIRE_WRITE(prescale);
   Wire.endTransmission();
 }
 
 /*
-Send PWM only STOP to channel, PWM start at 0. Non-incremental. Slow in loop
-*/
-void HPRGB::pca9685PWMSingle(uint8_t channel, uint16_t value)
-{
-  channel = (channel * 4) + 8;
-  Wire.beginTransmission(_pca9685_address);
-  Wire.write(channel); 
-  Wire.write(lowByte(value));
-  Wire.endTransmission();
-  Wire.beginTransmission(_pca9685_address);
-  Wire.write(channel + 1);
-  Wire.write(highByte(value));
-  Wire.endTransmission();
-}
-/*
 Send PWM only OFF to channel, PWM start at 0. auto-incremental.
 40% faster than single write and channel changes together.
 */
-void HPRGB::pca9685PWM(uint16_t value0,uint16_t value1,uint16_t value2)
+void HPRGB::pca9685PWM(uint8_t start, uint8_t numch, uint16_t * values)
 {
   Wire.beginTransmission(_pca9685_address);
-  Wire.write((byte)0x06);				// start from channel 0 ON
-  Wire.write((byte)0x00);				// set all ON time to 0
-  Wire.write((byte)0x00);
-  Wire.write(lowByte(value0));	// set OFF according to value
-  Wire.write(highByte(value0));
-  Wire.write((byte)0x00);
-  Wire.write((byte)0x00);
-  Wire.write(lowByte(value1));
-  Wire.write(highByte(value1));  
-  Wire.write((byte)0x00);
-  Wire.write((byte)0x00);
-  Wire.write(lowByte(value2));
-  Wire.write(highByte(value2));    
+  byte startcmd = start*4+6;
+  WIRE_WRITE((byte)startcmd);				// start from channel 0 ON
+  for (int ch=0;ch<numch;ch++ )
+  {
+    WIRE_WRITE((byte)0x00);				// set all ON time to 0
+    WIRE_WRITE((byte)0x00);
+    WIRE_WRITE(lowByte(values[ch]));	// set OFF according to value
+    WIRE_WRITE(highByte(values[ch]));
+  }
   Wire.endTransmission();
 }
 
@@ -350,14 +354,14 @@ uint16_t HPRGB::pca9685GetPWM(uint8_t channel)
 {
   channel = (channel * 4) + 6;
   Wire.beginTransmission(_pca9685_address);
-  Wire.write(channel);
+  WIRE_WRITE(channel);
   Wire.endTransmission();
   Wire.requestFrom(_pca9685_address,(uint8_t)4);
   while(Wire.available()){
-    uint8_t onLow = Wire.read();
-    uint8_t onHi = Wire.read();
-    uint8_t offLow = Wire.read();
-    uint8_t offHi = Wire.read();
+    uint8_t onLow = WIRE_READ();
+    uint8_t onHi = WIRE_READ();
+    uint8_t offLow = WIRE_READ();
+    uint8_t offHi = WIRE_READ();
     return (word((offHi & 0B00001111), offLow) - word((onHi & 0B00001111), onLow));
   }
 }
