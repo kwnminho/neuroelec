@@ -22,7 +22,7 @@
 
 #include "RDMEnums.h"
 #include "UsbProSender.h"
-#include "WProgram.h"
+#include "Arduino.h"
 
 /**
  * Sends a properly framed RDM message over the serial link

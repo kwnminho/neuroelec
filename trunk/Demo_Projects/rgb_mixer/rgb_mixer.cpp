@@ -1,4 +1,4 @@
-#include "WProgram.h"
+#include "Arduino.h"
 extern "C" void __cxa_pure_virtual() {}
 /*
  *  This program is free software; you can redistribute it and/or modify
@@ -172,7 +172,7 @@ void loop() {
   UsbProReceiver receiver(TakeAction);
   receiver.Read();
 }
-#include <WProgram.h>
+#include <Arduino.h>
 
 int main(void)
 {
